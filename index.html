@@ -468,7 +468,16 @@
 ====================================================================== */
 const params = new URLSearchParams(window.location.search);
 let difficulty = (params.get('difficulty') || 'Medium');
-difficulty = ['Easy','Medium','Hard'].includes(difficulty) ? difficulty : 'Medium';
+
+// Intercept "Random" and pick one of the three standard difficulties
+if (difficulty === 'Random') {
+  const diffArray = ['Easy', 'Medium', 'Hard'];
+  difficulty = diffArray[Math.floor(Math.random() * diffArray.length)];
+} 
+// Fallback for any typos in the URL
+else if (!['Easy','Medium','Hard'].includes(difficulty)) {
+  difficulty = 'Medium';
+}
 
 const CONFIG = {
   Easy:   { time: 30, tiles: 1 },
@@ -477,6 +486,7 @@ const CONFIG = {
 };
 const cfg = CONFIG[difficulty];
 
+// This will now display the randomly selected difficulty on the ticket!
 document.getElementById('modeText').textContent = difficulty.toUpperCase();
 
 /* ======================================================================
