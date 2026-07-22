@@ -375,7 +375,7 @@
   .ticket.back{
     transform:rotate(-7deg);
     top:-4px; left:10px;
-    opacity:0.7;
+    opacity:1;
     z-index:1;
   }
   .ticket.front{
@@ -451,7 +451,7 @@
   <div class="footer-banner">
     <div class="ticket-stack">
       <div class="ticket back"><span class="mode-text">&nbsp;</span></div>
-      <div class="ticket front"><span class="mode-text" id="modeText">[MEDIUM]</span></div>
+      <div class="ticket front"><span class="mode-text" id="modeText">MEDIUM</span></div>
     </div>
     <div class="fb-text">Scan again for<br>a new challenge</div>
   </div>
@@ -477,7 +477,7 @@ const CONFIG = {
 };
 const cfg = CONFIG[difficulty];
 
-document.getElementById('modeText').textContent = `[${difficulty.toUpperCase()}]`;
+document.getElementById('modeText').textContent = difficulty.toUpperCase();
 
 /* ======================================================================
    2. LIVE AI QUESTIONS — OpenRouter API
@@ -1230,7 +1230,7 @@ function renderIncorrect(headline){
     penaltyResult.innerHTML = `
       <div class="card-result penalty fade-in">You chose to skip your turn.</div>
     `;
-    setTimeout(renderTermination, 1600);
+    setTimeout(renderTermination, 5000);
   });
 
   gameArea.querySelector('#mysteryBtn').addEventListener('click', () => {
@@ -1240,7 +1240,7 @@ function renderIncorrect(headline){
     penaltyResult.innerHTML = `
       <div class="card-result ${isBenefit ? 'benefit' : 'penalty'} fade-in">${message}</div>
     `;
-    setTimeout(renderTermination, 1600);
+    setTimeout(renderTermination, 5000);
   });
 }
 
