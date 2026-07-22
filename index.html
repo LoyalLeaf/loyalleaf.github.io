@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quest'O Carousel</title>
+
+<!-- KaTeX for math rendering -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+
+<!-- Carnival-poster type pairing: Bungee (bold block display) + Lobster (script) + Baloo 2 (rounded body/UI) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Lobster&family=Baloo+2:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --maroon-deep:   #4a0e0e;
+    --maroon:        #6b1414;
+    --crimson:       #8f1d1d;
+    --red-panel:     #7a1414;
+    --gold:          #f6c744;
+    --gold-deep:     #d99a1f;
+    --cream:         #f6ecd9;
+    --orange-banner: #d9541f;
+  }
+
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+
+  body{
+    font-family:'Baloo 2', sans-serif;
+    background: var(--maroon-deep);
+    display:flex;
+    justify-content:center;
+    min-height:100vh;
+  }
+
+  .stage{
+    width:100%;
+    max-width:430px;
+    min-height:100vh;
+    background:var(--cream);
+    position:relative;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+    box-shadow: 0 0 40px rgba(0,0,0,0.5);
+  }
+
+  /* ============ HEADER: draped curtain + tent peaks ============ */
+  .curtain-wrap{
+    position:relative;
+    height:110px;
+    background: linear-gradient(180deg, var(--maroon-deep), var(--crimson) 70%);
+    overflow:hidden;
+  }
+  .tent-peaks{
+    position:absolute; inset:0;
+    display:flex; justify-content:space-around; align-items:flex-end;
+    padding:0 6%;
+  }
+  .tent-peaks .peak{
+    width:0; height:0;
+    border-left:26px solid transparent;
+    border-right:26px solid transparent;
+    border-bottom:46px solid var(--crimson);
+    opacity:0.85;
+    position:relative;
+  }
+  .tent-peaks .peak::after{
+    content:'';
+    position:absolute; top:-56px; left:-1px;
+    width:2px; height:14px; background:var(--gold);
+  }
+  .tent-peaks .peak::before{
+    content:'';
+    position:absolute; top:-56px; left:1px;
+    width:0; height:0;
+    border-left:7px solid var(--gold);
+    border-top:4px solid transparent;
+    border-bottom:4px solid transparent;
+  }
+  .curtain-fold{
+    position:absolute; inset:0;
+    background:
+      radial-gradient(ellipse at 12% -20%, rgba(0,0,0,0.35) 0%, transparent 55%),
+      radial-gradient(ellipse at 38% -20%, rgba(255,255,255,0.10) 0%, transparent 45%),
+      radial-gradient(ellipse at 62% -20%, rgba(0,0,0,0.30) 0%, transparent 50%),
+      radial-gradient(ellipse at 88% -20%, rgba(255,255,255,0.10) 0%, transparent 45%);
+  }
+  .curtain-scallop{
+    position:absolute; left:0; right:0; bottom:-1px; height:22px;
+    background: radial-gradient(circle at 10px 0, transparent 12px, var(--gold-deep) 13px, var(--gold-deep) 14px, transparent 15px) repeat-x;
+    background-size:28px 22px;
+  }
+  .curtain-scallop::after{
+    content:'';
+    position:absolute; inset:0 0 4px 0;
+    background: radial-gradient(circle at 10px 0, transparent 9px, var(--crimson) 10px) repeat-x;
+    background-size:28px 22px;
+  }
+
+  /* ============ TITLE MARQUEE ============ */
+  .title-wrap{
+    display:flex; flex-direction:column; align-items:center;
+    padding:6px 0 14px;
+    background:var(--cream);
+  }
+  .badge{
+    position:relative;
+    background: linear-gradient(180deg, var(--crimson), var(--maroon));
+    border:3px solid var(--gold);
+    border-radius:14px;
+    padding:10px 30px 14px;
+    clip-path: polygon(6% 0%, 94% 0%, 100% 50%, 94% 100%, 6% 100%, 0% 50%);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+    text-align:center;
+  }
+  .badge .script{
+    font-family:'Lobster', cursive;
+    color:var(--gold);
+    font-size:1.05rem;
+    display:block;
+    letter-spacing:0.5px;
+    text-shadow:0 2px 0 rgba(0,0,0,0.3);
+  }
+  .badge .block{
+    font-family:'Bungee', system-ui;
+    color:var(--gold);
+    font-size:1.9rem;
+    letter-spacing:2px;
+    display:block;
+    text-shadow: 0 2px 0 #7a4a00, 0 4px 6px rgba(0,0,0,0.35);
+  }
+
+  /* ============ MARQUEE LIGHT BORDER (reused for question + option boxes) ============ */
+  .marquee{
+    position:relative;
+    background: radial-gradient(ellipse at 50% 0%, #5a0f0f, var(--maroon-deep) 80%);
+    border-radius:10px;
+    margin:0 18px;
+  }
+  .marquee-inner{
+    padding:18px 16px;
+    color:var(--cream);
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    overflow-x: auto;
+    max-width: 100%;
+    overflow-y: hidden;
+  }
+  .lights{ position:absolute; pointer-events:none; }
+  .lights-top, .lights-bottom{
+    left:0; right:0; height:12px;
+    background-image: radial-gradient(circle, var(--gold) 2.4px, rgba(246,199,68,0) 2.6px);
+    background-size:16px 12px;
+    background-repeat:repeat-x;
+    background-position:8px center;
+    filter: drop-shadow(0 0 3px rgba(246,199,68,0.9));
+  }
+  .lights-top{ top:-6px; }
+  .lights-bottom{ bottom:-6px; }
+  .lights-left, .lights-right{
+    top:6px; bottom:6px; width:12px;
+    background-image: radial-gradient(circle, var(--gold) 2.4px, rgba(246,199,68,0) 2.6px);
+    background-size:12px 16px;
+    background-repeat:repeat-y;
+    background-position:center 8px;
+    filter: drop-shadow(0 0 3px rgba(246,199,68,0.9));
+  }
+  .lights-left{ left:-6px; }
+  .lights-right{ right:-6px; }
+
+  @keyframes twinkle{
+    0%,100%{ opacity:1; }
+    50%{ opacity:0.45; }
+  }
+  .lights-top, .lights-right{ animation: twinkle 1.6s infinite steps(2); }
+  .lights-bottom, .lights-left{ animation: twinkle 1.6s infinite steps(2) 0.4s; }
+
+  /* ============ QUESTION AREA ============ */
+  .question-box{ margin-top:8px; min-height:150px; }
+  .question-box .katex{ color:var(--cream); font-size:1.05rem; }
+  .timer-row{
+    display:flex; justify-content:space-between; align-items:center;
+    margin:0 18px 10px;
+    font-family:'Bungee', system-ui;
+    color:var(--maroon);
+    font-size:0.85rem;
+  }
+  .timer-pill{
+    background:var(--gold);
+    color:var(--maroon-deep);
+    border-radius:999px;
+    padding:4px 14px;
+    font-family:'Bungee', system-ui;
+    font-size:0.95rem;
+    box-shadow: inset 0 -2px 0 rgba(0,0,0,0.15);
+  }
+  .timer-pill.low{ background:#e6533a; color:#fff; animation: pulse 0.6s infinite; }
+  @keyframes pulse{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.08); } }
+
+  /* ============ OPTION BUTTONS ============ */
+  .options{ display:flex; flex-direction:column; gap:12px; margin-top:14px; }
+  .opt-btn{
+    all:unset;
+    cursor:pointer;
+    display:block;
+  }
+  .opt-btn .marquee-inner{
+    padding:12px 14px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .opt-letter{
+    font-family:'Bungee', system-ui;
+    color:var(--gold);
+    background:rgba(246,199,68,0.12);
+    border:2px solid var(--gold);
+    border-radius:8px;
+    min-width:30px;
+    text-align:center;
+    padding:2px 0;
+    font-size:0.9rem;
+  }
+  .opt-btn:hover .marquee{ filter:brightness(1.15); }
+  .opt-btn:active .marquee{ filter:brightness(0.9); }
+  .opt-btn:disabled, .opt-btn.disabled{ pointer-events:none; opacity:0.6; }
+
+  .opt-btn.correct .marquee{ background: radial-gradient(ellipse at 50% 0%, #1f5a2a, #123a1b 80%); }
+  .opt-btn.wrong .marquee{ background: radial-gradient(ellipse at 50% 0%, #6b1414, #3a0808 80%); }
+
+  /* ============ RESULT PANEL ============ */
+  .result-banner{
+    margin:0 18px 12px;
+    font-family:'Bungee', system-ui;
+    text-align:center;
+    padding:10px;
+    border-radius:8px;
+    font-size:1.05rem;
+    letter-spacing:0.5px;
+  }
+  .result-banner.good{ background:#1f5a2a; color:#d8ffe0; }
+  .result-banner.bad{ background:#8f1d1d; color:#ffe0e0; }
+
+  .solution-box{
+    margin:0 18px 14px;
+    background:rgba(0,0,0,0.04);
+    border:2px dashed var(--gold-deep);
+    border-radius:10px;
+    padding:12px;
+    color:var(--maroon-deep);
+    font-size:0.92rem;
+  }
+  .solution-box .label{
+    font-family:'Bungee', system-ui;
+    font-size:0.72rem;
+    color:var(--maroon);
+    margin-bottom:4px;
+    display:block;
+  }
+
+  .penalty-row{ display:flex; gap:10px; margin:0 18px 16px; }
+  .penalty-btn{
+    all:unset;
+    cursor:pointer;
+    flex:1;
+    text-align:center;
+    font-family:'Bungee', system-ui;
+    font-size:0.78rem;
+    color:var(--gold);
+    background: linear-gradient(180deg, var(--crimson), var(--maroon));
+    border:2px solid var(--gold);
+    border-radius:8px;
+    padding:12px 6px;
+  }
+  .penalty-btn:hover{ filter:brightness(1.15); }
+
+  .skip-solution-btn{
+    all:unset;
+    cursor:pointer;
+    display:block;
+    margin: 12px auto 0;
+    text-align:center;
+    font-family:'Bungee', system-ui;
+    font-size:0.78rem;
+    color:var(--gold);
+    background: linear-gradient(180deg, var(--crimson), var(--maroon));
+    border:2px solid var(--gold);
+    border-radius:8px;
+    padding:10px 20px;
+    width:fit-content;
+  }
+  .skip-solution-btn:hover{ filter:brightness(1.15); }
+
+  .card-result{
+    margin:0 18px 16px;
+    text-align:center;
+    font-family:'Baloo 2', sans-serif;
+    font-weight:700;
+    padding:12px;
+    border-radius:8px;
+  }
+  .card-result.benefit{ background:#1f5a2a; color:#d8ffe0; }
+  .card-result.penalty{ background:#8f1d1d; color:#ffe0e0; }
+
+  /* ============ TERMINATION ============ */
+  .term-wrap{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:24px;
+    gap:14px;
+  }
+  .term-count{
+    font-family:'Bungee', system-ui;
+    font-size:3rem;
+    color:var(--maroon-deep);
+    background:var(--gold);
+    width:90px; height:90px;
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  }
+  .term-msg{ color:var(--maroon); font-weight:700; font-size:1rem; max-width:280px; }
+  .term-fallback{ color:var(--maroon); font-size:0.85rem; opacity:0.75; max-width:280px; }
+
+  /* ============ FOOTER ============ */
+  .spacer{ flex:1; }
+  .footer-banner{
+    position:relative;
+    height:60px;
+    background: linear-gradient(90deg, var(--orange-banner), #b8340f);
+    display:flex; align-items:center; justify-content:flex-end;
+    padding-right:16px;
+  }
+  .footer-banner .fb-text{
+    font-family:'Baloo 2', sans-serif;
+    color:#fff;
+    font-size:0.7rem;
+    text-align:right;
+    line-height:1.3;
+    opacity:0.9;
+  }
+  .ticket-stack{
+    position:absolute; left:14px; bottom:6px;
+    width:132px; height:52px;
+  }
+  .ticket{
+    position:absolute;
+    width:120px; height:38px;
+    background:linear-gradient(135deg, var(--gold), var(--gold-deep));
+    border:2px dashed var(--maroon-deep);
+    border-radius:8px;
+    box-shadow:0 3px 6px rgba(0,0,0,0.3);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+  }
+  .ticket::before{
+    content:'\2605';
+    position:absolute;
+    left:8px;
+    color:var(--maroon-deep);
+    font-size:0.65rem;
+    opacity:0.55;
+  }
+  .ticket.back{
+    transform:rotate(-7deg);
+    top:-4px; left:10px;
+    opacity:0.7;
+    z-index:1;
+  }
+  .ticket.front{
+    transform:rotate(3deg);
+    top:12px; left:0;
+    z-index:2;
+  }
+  .ticket .mode-text{
+    font-family:'Bungee', system-ui;
+    color:var(--maroon-deep);
+    font-size:0.68rem;
+    letter-spacing:0.5px;
+    padding-left:14px;
+    white-space:nowrap;
+  }
+  .bottom-block{
+    background:var(--maroon-deep);
+    text-align:center;
+    padding:10px 10px 14px;
+  }
+  .bottom-block .l1{
+    color:var(--gold);
+    font-family:'Baloo 2', sans-serif;
+    font-weight:800;
+    font-size:0.85rem;
+  }
+  .bottom-block .l2{
+    color:#fff;
+    font-family:'Baloo 2', sans-serif;
+    font-weight:600;
+    font-size:0.78rem;
+    opacity:0.9;
+  }
+
+  .fade-in{ animation: fadeIn 0.35s ease both; }
+  @keyframes fadeIn{ from{ opacity:0; transform:translateY(6px); } to{ opacity:1; transform:translateY(0); } }
+</style>
+</head>
+<body>
+
+<div class="stage" id="stage">
+
+  <!-- HEADER -->
+  <div class="curtain-wrap">
+    <div class="tent-peaks">
+      <div class="peak"></div>
+      <div class="peak" style="border-bottom-color:#7a1414;"></div>
+      <div class="peak"></div>
+    </div>
+    <div class="curtain-fold"></div>
+    <div class="curtain-scallop"></div>
+  </div>
+
+  <div class="title-wrap">
+    <div class="badge">
+      <span class="script">Quest'O</span>
+      <span class="block">CAROUSEL</span>
+    </div>
+  </div>
+
+  <!-- TIMER -->
+  <div class="timer-row">
+    <span id="topicLabel"></span>
+    <span class="timer-pill" id="timerPill">30s</span>
+  </div>
+
+  <!-- GAME AREA (populated by JS) -->
+  <div id="gameArea"></div>
+
+  <div class="spacer"></div>
+
+  <!-- FOOTER -->
+  <div class="footer-banner">
+    <div class="ticket-stack">
+      <div class="ticket back"><span class="mode-text">&nbsp;</span></div>
+      <div class="ticket front"><span class="mode-text" id="modeText">[MEDIUM]</span></div>
+    </div>
+    <div class="fb-text">Scan again for<br>a new challenge</div>
+  </div>
+  <div class="bottom-block">
+    <div class="l1">Property of 10 - Resilient</div>
+    <div class="l2">Mathematics 10</div>
+  </div>
+
+</div>
+
+<script>
+/* ======================================================================
+   1. DIFFICULTY / URL PARAMETERS
+====================================================================== */
+const params = new URLSearchParams(window.location.search);
+let difficulty = (params.get('difficulty') || 'Medium');
+difficulty = ['Easy','Medium','Hard'].includes(difficulty) ? difficulty : 'Medium';
+
+const CONFIG = {
+  Easy:   { time: 30, tiles: 1 },
+  Medium: { time: 60, tiles: 2 },
+  Hard:   { time: 90, tiles: 3 }
+};
+const cfg = CONFIG[difficulty];
+
+document.getElementById('modeText').textContent = `[${difficulty.toUpperCase()}]`;
+
+/* ======================================================================
+   2. LIVE AI QUESTIONS — OpenRouter API
+   Grade 10 competencies: rational (non-integral) exponents,
+   simplification of radical expressions, operations on radicals.
+====================================================================== */
+const OPENROUTER_API_KEY = "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";
+const OPENROUTER_ENDPOINT = "https://openrouter.ai/api/v1/chat/completions";
+
+// You can use "google/gemini-2.5-flash", "google/gemini-flash-1.5", 
+// "meta-llama/llama-3.3-70b-instruct", or any free/paid model on OpenRouter.
+const OPENROUTER_MODEL = "meta-llama/llama-3.3-70b-instruct";
+
+const DIFFICULTY_DESCRIPTION = {
+  Easy:   "a STRICTLY EASY, introductory level (single-step, direct application of rules, small basic numbers only)",
+  Medium: "a SOLID MEDIUM level (requires 2-3 distinct steps, solid algebraic manipulation, and intermediate variables/numbers—make it noticeably harder than easy)",
+  Hard:   "an EXTREMELY CHALLENGING level (complex, multi-layered problems combining multiple rules, fractional exponents, and larger polynomials, designed to stump advanced students)"
+};
+
+const SUBTOPICS = [
+  "laws of rational (non-integral) exponents applied to a purely numeric expression",
+  "laws of rational (non-integral) exponents applied to an algebraic expression with a variable",
+  "converting between radical form and rational exponent form",
+  "simplifying a radical expression that has a perfect-square or perfect-cube factor",
+  "simplifying a radical expression that contains a variable under the radical",
+  "adding or subtracting like radical expressions",
+  "multiplying two radical expressions together",
+  "dividing radical expressions or rationalizing a monomial denominator",
+  "rationalizing a binomial denominator using a conjugate",
+  "a short real-world word problem that requires radicals or rational exponents to solve"
+];
+
+const OPTION_LETTERS = ['A','B','C'];
+const KATEX_OPTIONS = {
+  delimiters: [
+    { left: '$$', right: '$$', display: true },
+    { left: '$', right: '$', display: false }
+  ],
+  throwOnError: false
+};
+
+let recentQuestions = [];
+
+function isKeyConfigured(){
+  return !!OPENROUTER_API_KEY
+    && OPENROUTER_API_KEY.trim() !== ''
+    && !OPENROUTER_API_KEY.includes('PASTE_YOUR');
+}
+
+function pickFallback(diff){
+  const bank = FALLBACK_BANK[diff] || FALLBACK_BANK.Medium;
+  return bank[Math.floor(Math.random() * bank.length)];
+}
+
+function normalizeJsonBackslashes(jsonString){
+  // OpenRouter models sometimes return LaTeX as `\sqrt` inside JSON strings.
+  // In JSON, that is either invalid (`\s`) or silently corrupted (`\f` in
+  // `\frac`). This regex doubles a single backslash unless it is escaping a
+  // JSON quote or is already part of a doubled backslash sequence.
+  return jsonString.replace(/(^|[^\\])\\(?!["\\])/g, '$1\\\\');
+}
+
+async function generateQuestion(diff){
+  let result;
+
+  if(!isKeyConfigured()){
+    console.warn('[Quest\'O Carousel] No OpenRouter API key configured — using an offline fallback question.');
+    result = pickFallback(diff);
+  } else {
+    const subtopic = SUBTOPICS[Math.floor(Math.random() * SUBTOPICS.length)];
+    const avoidList = recentQuestions.length
+      ? `\nDo NOT reuse any of these recent questions, or trivial number-swapped variants of them:\n- ${recentQuestions.join('\n- ')}`
+      : '';
+
+    const prompt = `You are a Grade 10 mathematics teacher writing ONE brand-new multiple-choice question at ${DIFFICULTY_DESCRIPTION[diff]} of difficulty.
+Focus specifically on this sub-topic: ${subtopic}.
+This is part of a larger Grade 10 unit on: laws of rational (non-integral) exponents, simplification of radical expressions, and operations involving radical expressions.
+${avoidList}
+
+Return ONLY valid JSON with this exact shape, and nothing else (no markdown fences, no commentary):
+{
+  "question": "Natural plain text. All math MUST be in LaTeX wrapped in $ delimiters (e.g., 'Simplify $\\\\sqrt{49}$').",
+  "options": { "A": "Text with $ LaTeX $", "B": "Text with $ LaTeX $", "C": "Text with $ LaTeX $" },
+  "correctAnswer": "A",
+  "solution": "Step-by-step explanation. All math MUST be in LaTeX wrapped in $ delimiters."
+}
+
+Rules:
+- NEVER use plain keyboard text for math. Do NOT use '/', 'sqrt()', or simple '^' for exponents outside of LaTeX.
+- ALWAYS use proper KaTeX/LaTeX formatting wrapped in single $ delimiters for inline math.
+- Use professional notation: use '\\\\dfrac{a}{b}' for fractions, '\\\\sqrt[n]{x}' for roots, and '$x^{\\\\frac{2}{3}}$' for rational exponents.
+- CRITICAL: In your JSON output, EVERY LaTeX backslash MUST be double-escaped with two backslashes (e.g. \\\\sqrt, \\\\times, \\\\frac, \\\\dfrac).
+- Exactly one of A/B/C is correct; place the correct answer in a random position. Do NOT use the same answer for more than one option.
+- The two wrong options should be plausible common-mistake answers.
+- Keep the question self-contained and unambiguous.
+- CRITICAL OPTION FORMAT: The values for options A, B, and C MUST contain ONLY the final mathematical answer (e.g., '$5\\\\sqrt{2}$' or '$\\\\dfrac{x}{y}$'). Absolutely NO explanatory text, complete sentences, equations (like 'x = ...'), or solution steps are allowed inside the options.`;
+
+    try {
+      const res = await fetch(OPENROUTER_ENDPOINT, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+          "Content-Type": "application/json",
+          "HTTP-Referer": window.location.href,
+          "X-Title": "Quest'O Carousel"
+        },
+        body: JSON.stringify({
+          model: OPENROUTER_MODEL,
+          messages: [
+            { role: "user", content: prompt }
+          ],
+          temperature: 0.3, // Lowered for more deterministic output
+          response_format: { type: "json_object" } // Enforces JSON structure
+        })
+      });
+
+      if(!res.ok){
+        throw new Error(`OpenRouter API request failed: HTTP ${res.status}`);
+      }
+
+      const data = await res.json();
+      const rawText = data?.choices?.[0]?.message?.content;
+      if(!rawText) throw new Error("OpenRouter returned no content");
+
+      // Extract JSON payload
+      const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+      if(!jsonMatch) throw new Error("No JSON object found in OpenRouter response");
+
+      let jsonString = jsonMatch[0];
+
+      jsonString = normalizeJsonBackslashes(jsonString);
+
+      const parsed = JSON.parse(jsonString);
+
+      if(!parsed.question || !parsed.options?.A || !parsed.options?.B || !parsed.options?.C
+         || !["A","B","C"].includes(parsed.correctAnswer) || !parsed.solution){
+        throw new Error("OpenRouter response was missing required fields");
+      }
+      result = parsed;
+    } catch(err) {
+      console.warn('[Quest\'O Carousel] OpenRouter question generation failed — using offline fallback. Reason:', err?.message || err);
+      result = pickFallback(diff);
+    }
+  }
+
+  // Randomize answer placement
+  result = shuffleCorrectLetter(result);
+
+  recentQuestions.push(result.question);
+  if(recentQuestions.length > 5) recentQuestions.shift();
+
+  return result;
+}
+
+function shuffleCorrectLetter(q) {
+  // Track original keys alongside their values to prevent text-matching bugs
+  const entries = OPTION_LETTERS.map(l => ({ letter: l, value: q.options[l] }));
+
+  // Fisher-Yates shuffle on the entries array
+  for (let i = entries.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [entries[i], entries[j]] = [entries[j], entries[i]];
+  }
+
+  const newOptions = {};
+  let newCorrectLetter = 'A';
+
+  OPTION_LETTERS.forEach((l, i) => {
+    newOptions[l] = entries[i].value;
+    // Compare the original letter key rather than the string value
+    if (entries[i].letter === q.correctAnswer) {
+      newCorrectLetter = l;
+    }
+  });
+
+  return { ...q, options: newOptions, correctAnswer: newCorrectLetter };
+}
+
+/* Fallback bank — generated locally if the OpenRouter call fails. The bank
+   contains 120 unique Grade 10 questions per difficulty, exceeding the
+   requested 100 because the rendering/state cleanup below reduced overhead. */
+const fmt = value => `$${value}$`;
+const makeQuestion = (question, correct, wrongB, wrongC, solution) => ({
+  question,
+  options: { A: fmt(correct), B: fmt(wrongB), C: fmt(wrongC) },
+  correctAnswer: "A",
+  solution
+});
+const ordinal = n => `${n}${n === 1 ? 'st' : n === 2 ? 'nd' : n === 3 ? 'rd' : 'th'}`;
+
+function buildFallbackBank(){
+  const easy = [];
+  const medium = [];
+  const hard = [];
+  const squareFree = [2,3,5,6,7,10,11,13,14,15,17,19,21,22,23,26,29,30,31,33,34,35,37,38,39,41,42,43,46,47];
+  const cubeFree = [2,3,5,6,7,10,11,13,14,15,17,19,21,22,23];
+  const smallBases = [2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,18,20,24,25,27];
+  const sqrtFactors = [2,3,5,6,7,10,11,13,14,15,17,19,21,22,23,26,29,30,31,33,34,35,37,38,39,41,42,43,46,47];
+
+  for(let n = 2; n <= 21; n++){
+    easy.push(makeQuestion(
+      `Simplify: $\\sqrt{${n * n}}$`,
+      `${n}`,
+      `${n + 2}`,
+      `\\sqrt{${n}}`,
+      `$${n * n}$ is a perfect square, and $${n}^2 = ${n * n}$, so $\\sqrt{${n * n}} = ${n}$.`
+    ));
+  }
+
+  for(let n = 2; n <= 11; n++){
+    easy.push(makeQuestion(
+      `Simplify: $\\sqrt[3]{${n ** 3}}$`,
+      `${n}`,
+      `${n * 3}`,
+      `\\sqrt[3]{${n}}`,
+      `$${n ** 3}$ is a perfect cube, and $${n}^3 = ${n ** 3}$, so $\\sqrt[3]{${n ** 3}} = ${n}$.`
+    ));
+  }
+
+  smallBases.forEach(n => {
+    easy.push(makeQuestion(
+      `Write in radical form: $${n}^{\\frac{1}{2}}$`,
+      `\\sqrt{${n}}`,
+      `${n}\\sqrt{2}`,
+      `\\sqrt[${n}]{2}`,
+      `$a^{\\frac{1}{2}}$ means the square root of $a$, so $${n}^{\\frac{1}{2}} = \\sqrt{${n}}$.`
+    ));
+  });
+
+  smallBases.slice(0, 10).forEach(n => {
+    easy.push(makeQuestion(
+      `Write in radical form: $${n}^{\\frac{1}{3}}$`,
+      `\\sqrt[3]{${n}}`,
+      `3\\sqrt{${n}}`,
+      `\\sqrt{${n}^3}`,
+      `$a^{\\frac{1}{3}}$ means the cube root of $a$, so $${n}^{\\frac{1}{3}} = \\sqrt[3]{${n}}$.`
+    ));
+  });
+
+  for(let a = 2; a <= 21; a++){
+    const b = a + 1;
+    easy.push(makeQuestion(
+      `Simplify: $\\sqrt{${a * a}} \\cdot \\sqrt{${b * b}}$`,
+      `${a * b}`,
+      `${a + b}`,
+      `${a * a + b * b}`,
+      `$\\sqrt{${a * a}} = ${a}$ and $\\sqrt{${b * b}} = ${b}$, so the product is $${a}\\cdot ${b} = ${a * b}$.`
+    ));
+  }
+
+  smallBases.forEach((n, index) => {
+    const root = index % 2 === 0 ? 2 : 3;
+    easy.push(makeQuestion(
+      `Write in rational exponent form: $\\sqrt[${root}]{${n}}$`,
+      `${n}^{\\frac{1}{${root}}}`,
+      `${n}^{${root}}`,
+      `\\dfrac{${n}}{${root}}`,
+      `$\\sqrt[${root}]{a}$ is the same as $a^{\\frac{1}{${root}}}$, so $\\sqrt[${root}]{${n}} = ${n}^{\\frac{1}{${root}}}$.`
+    ));
+  });
+
+  for(let n = 1; n <= 20; n++){
+    easy.push(makeQuestion(
+      `Simplify: $\\sqrt{${n * n}x^2}$, where $x \\ge 0$`,
+      `${n}x`,
+      `${n}x^2`,
+      `${n * n}x`,
+      `$\\sqrt{${n * n}x^2}=\\sqrt{${n * n}}\\sqrt{x^2}=${n}x$ when $x \\ge 0$.`
+    ));
+  }
+
+  sqrtFactors.forEach((b, i) => {
+    const a = (i % 10) + 2;
+    const radicand = a * a * b;
+    medium.push(makeQuestion(
+      `Simplify: $\\sqrt{${radicand}}$`,
+      `${a}\\sqrt{${b}}`,
+      `${a * a}\\sqrt{${b}}`,
+      `${a}\\sqrt{${a * b}}`,
+      `$${radicand} = ${a * a}\\times ${b}$, so $\\sqrt{${radicand}}=\\sqrt{${a * a}}\\sqrt{${b}}=${a}\\sqrt{${b}}$.`
+    ));
+  });
+
+  cubeFree.forEach((b, i) => {
+    const a = (i % 6) + 2;
+    const radicand = a ** 3 * b;
+    medium.push(makeQuestion(
+      `Simplify: $\\sqrt[3]{${radicand}}$`,
+      `${a}\\sqrt[3]{${b}}`,
+      `${a ** 2}\\sqrt[3]{${b}}`,
+      `${a}\\sqrt{${b}}`,
+      `$${radicand}=${a ** 3}\\times ${b}$, so $\\sqrt[3]{${radicand}}=${a}\\sqrt[3]{${b}}$.`
+    ));
+  });
+
+  for(let n = 2; n <= 21; n++){
+    const exponent = n % 2 === 0 ? 2 : 3;
+    const value = n ** exponent;
+    medium.push(makeQuestion(
+      `Evaluate: $${value}^{\\frac{${exponent - 1}}{${exponent}}}$`,
+      `${n ** (exponent - 1)}`,
+      `${n * (exponent - 1)}`,
+      `${value * (exponent - 1)}`,
+      `$${value}^{\\frac{${exponent - 1}}{${exponent}}}=(\\sqrt[${exponent}]{${value}})^{${exponent - 1}}=${n}^{${exponent - 1}}=${n ** (exponent - 1)}$.`
+    ));
+  }
+
+  for(let i = 0; i < 20; i++){
+    const a = i + 2;
+    const b = i + 5;
+    const r = squareFree[i % squareFree.length];
+    medium.push(makeQuestion(
+      `Simplify: $${a}\\sqrt{${r}} + ${b}\\sqrt{${r}}$`,
+      `${a + b}\\sqrt{${r}}`,
+      `${a + b}\\sqrt{${r * 2}}`,
+      `${a * b}\\sqrt{${r}}`,
+      `Like radicals have the same radicand, so add the coefficients: $${a}\\sqrt{${r}}+${b}\\sqrt{${r}}=${a + b}\\sqrt{${r}}$.`
+    ));
+  }
+
+  for(let i = 0; i < 20; i++){
+    const a = squareFree[i % squareFree.length];
+    const b = squareFree[(i + 3) % squareFree.length];
+    const product = a * b;
+    medium.push(makeQuestion(
+      `Simplify: $\\sqrt{${a}}\\cdot\\sqrt{${b}}$`,
+      `\\sqrt{${product}}`,
+      `${product}`,
+      `\\sqrt{${a + b}}`,
+      `Use $\\sqrt{a}\\sqrt{b}=\\sqrt{ab}$ for nonnegative $a$ and $b$: $\\sqrt{${a}}\\sqrt{${b}}=\\sqrt{${product}}$.`
+    ));
+  }
+
+  for(let i = 0; i < 15; i++){
+    const a = i + 2;
+    const r = squareFree[(i + 8) % squareFree.length];
+    medium.push(makeQuestion(
+      `Rationalize: $\\dfrac{${a}}{\\sqrt{${r}}}$`,
+      `\\dfrac{${a}\\sqrt{${r}}}{${r}}`,
+      `\\dfrac{${a}}{${r}\\sqrt{${r}}}`,
+      `${a}\\sqrt{${r}}`,
+      `Multiply numerator and denominator by $\\sqrt{${r}}$: $\\dfrac{${a}}{\\sqrt{${r}}}\\cdot\\dfrac{\\sqrt{${r}}}{\\sqrt{${r}}}=\\dfrac{${a}\\sqrt{${r}}}{${r}}$.`
+    ));
+  }
+
+  while(medium.length < 120){
+    const i = medium.length;
+    const a = (i % 8) + 2;
+    const r = squareFree[i % squareFree.length];
+    medium.push(makeQuestion(
+      `Simplify: $\\sqrt{${a * a * r}x^2}$, where $x \\ge 0$`,
+      `${a}x\\sqrt{${r}}`,
+      `${a}\\sqrt{${r}x}`,
+      `${a * a}x\\sqrt{${r}}`,
+      `$\\sqrt{${a * a * r}x^2}=\\sqrt{${a * a}}\\sqrt{x^2}\\sqrt{${r}}=${a}x\\sqrt{${r}}$ when $x \\ge 0$.`
+    ));
+  }
+
+  for(let i = 0; i < 25; i++){
+    const r = squareFree[i % squareFree.length];
+    const a = Math.floor(Math.sqrt(r)) || 1;
+    const denominator = r - a * a;
+    hard.push(makeQuestion(
+      `Rationalize: $\\dfrac{1}{\\sqrt{${r}} - ${a}}$`,
+      `\\dfrac{\\sqrt{${r}} + ${a}}{${denominator}}`,
+      `\\dfrac{\\sqrt{${r}} - ${a}}{${denominator}}`,
+      `\\sqrt{${r}} + ${a}`,
+      `Multiply by the conjugate: $\\dfrac{1}{\\sqrt{${r}}-${a}}\\cdot\\dfrac{\\sqrt{${r}}+${a}}{\\sqrt{${r}}+${a}}=\\dfrac{\\sqrt{${r}}+${a}}{${r}-${a * a}}=\\dfrac{\\sqrt{${r}}+${a}}{${denominator}}$.`
+    ));
+  }
+
+  for(let n = 2; n <= 21; n++){
+    const denom = n + 1;
+    hard.push(makeQuestion(
+      `Simplify: $\\left(\\dfrac{${n ** 4}}{${denom ** 4}}\\right)^{\\frac{3}{4}}$`,
+      `\\dfrac{${n ** 3}}{${denom ** 3}}`,
+      `\\dfrac{${n}}{${denom}}`,
+      `\\dfrac{${n ** 4}}{${denom ** 4}}`,
+      `Take the fourth root first, then cube: $\\left(\\dfrac{${n ** 4}}{${denom ** 4}}\\right)^{\\frac{3}{4}}=\\left(\\dfrac{${n}}{${denom}}\\right)^3=\\dfrac{${n ** 3}}{${denom ** 3}}$.`
+    ));
+  }
+
+  for(let i = 0; i < 20; i++){
+    const r = squareFree[(i + 4) % squareFree.length];
+    const a = (i % 7) + 2;
+    const b = (i % 5) + 1;
+    
+    // Helper logic to cleanly format positive/negative signs and coefficients
+    const constantTerm = r - a * b;
+    const coeffTerm = a - b;
+    let formattedTerm = "";
+    if (coeffTerm === 1) formattedTerm = `+ \\sqrt{${r}}`;
+    else if (coeffTerm === -1) formattedTerm = `- \\sqrt{${r}}`;
+    else if (coeffTerm > 0) formattedTerm = `+ ${coeffTerm}\\sqrt{${r}}`;
+    else formattedTerm = `- ${Math.abs(coeffTerm)}\\sqrt{${r}}`;
+    
+    const correctAns = `${constantTerm} ${formattedTerm}`;
+
+    hard.push(makeQuestion(
+      `Simplify: $(\\sqrt{${r}} + ${a})(\\sqrt{${r}} - ${b})$`,
+      correctAns,
+      `${r + a * b} + ${a + b}\\sqrt{${r}}`,
+      `${r - a * b}\\sqrt{${r}}`,
+      `FOIL: $(\\sqrt{${r}}+${a})(\\sqrt{${r}}-${b})=${r}-${b}\\sqrt{${r}}+${a}\\sqrt{${r}}-${a * b}=${correctAns}$.`
+    ));
+  }
+
+  for(let i = 0; i < 20; i++){
+    const a = (i % 6) + 2;
+    const b = squareFree[i % squareFree.length];
+    hard.push(makeQuestion(
+      `Simplify: $\\sqrt{${a * a * b}x^4y^2}$, where $x \\ge 0$ and $y \\ge 0$`,
+      `${a}x^2y\\sqrt{${b}}`,
+      `${a}xy\\sqrt{${b}}`,
+      `${a * a}x^2y\\sqrt{${b}}`,
+      `$\\sqrt{${a * a * b}x^4y^2}=\\sqrt{${a * a}}\\sqrt{x^4}\\sqrt{y^2}\\sqrt{${b}}=${a}x^2y\\sqrt{${b}}$.`
+    ));
+  }
+
+  for(let i = 0; i < 20; i++){
+    const a = (i % 6) + 2;
+    const b = cubeFree[i % cubeFree.length];
+    hard.push(makeQuestion(
+      `Simplify: $\\sqrt[3]{${a ** 3 * b}x^6}$`,
+      `${a}x^2\\sqrt[3]{${b}}`,
+      `${a}x^3\\sqrt[3]{${b}}`,
+      `${a ** 2}x^2\\sqrt[3]{${b}}`,
+      `$\\sqrt[3]{${a ** 3 * b}x^6}=\\sqrt[3]{${a ** 3}}\\sqrt[3]{x^6}\\sqrt[3]{${b}}=${a}x^2\\sqrt[3]{${b}}$.`
+    ));
+  }
+
+  while(hard.length < 120){
+    const i = hard.length;
+    const a = (i % 9) + 2;
+    const r = squareFree[i % squareFree.length];
+    hard.push(makeQuestion(
+      `Simplify: $\\dfrac{${a}\\sqrt{${r * 4}} - ${a}\\sqrt{${r}}}{\\sqrt{${r}}}$`,
+      `${a}`,
+      `${a}\\sqrt{${r}}`,
+      `${2 * a}`,
+      `Since $\\sqrt{${r * 4}}=2\\sqrt{${r}}$, the numerator becomes $${2 * a}\\sqrt{${r}}-${a}\\sqrt{${r}}=${a}\\sqrt{${r}}$. Dividing by $\\sqrt{${r}}$ gives $${a}$.`
+    ));
+  }
+
+  return { Easy: easy, Medium: medium.slice(0, 120), Hard: hard.slice(0, 120) };
+}
+
+const FALLBACK_BANK = buildFallbackBank();
+
+/* ======================================================================
+   3. STATE / RENDER HELPERS
+====================================================================== */
+const gameArea = document.getElementById('gameArea');
+const timerPill = document.getElementById('timerPill');
+const topicLabel = document.getElementById('topicLabel');
+topicLabel.textContent = 'Math Challenge';
+
+let currentQuestion = null;
+let timeLeft = cfg.time;
+let timerInterval = null;
+let answered = false;
+let optionButtons = [];
+
+function renderLatex(str){
+  if(str === undefined || str === null) return '';
+
+  const container = document.createElement('span');
+  container.textContent = str;
+
+  try{
+    renderMathInElement(container, KATEX_OPTIONS);
+  }catch(e){
+    console.warn('[Quest\'O Carousel] KaTeX auto-render failed, showing raw text instead:', e);
+  }
+
+  return container.innerHTML;
+}
+
+function marqueeWrap(innerHtml, extraClass=''){
+  return `
+    <div class="marquee ${extraClass}">
+      <div class="lights lights-top"></div>
+      <div class="lights lights-bottom"></div>
+      <div class="lights lights-left"></div>
+      <div class="lights lights-right"></div>
+      <div class="marquee-inner">${innerHtml}</div>
+    </div>`;
+}
+
+/* ======================================================================
+   3b. LOADING STATE — shown while Gemini generates the question
+====================================================================== */
+function renderLoading(){
+  gameArea.innerHTML = `
+    <div class="question-box fade-in">
+      ${marqueeWrap(`<div style="text-align:center; padding:20px 0;">
+        <div style="font-family:'Bungee', system-ui; color:var(--gold); font-size:0.95rem;">
+          Summoning your question&hellip;
+        </div>
+      </div>`)}
+    </div>
+  `;
+}
+
+/* ======================================================================
+   4. STATE 1 — ACTIVE GAME
+====================================================================== */
+async function startRound(){
+  answered = false;
+  clearInterval(timerInterval);
+  timeLeft = cfg.time;
+  updateTimerPill();
+  renderLoading();
+
+  currentQuestion = await generateQuestion(difficulty);
+  renderActiveGame();
+}
+
+function renderActiveGame(){
+  gameArea.innerHTML = `
+    <div class="question-box marquee-wrap fade-in">
+      ${marqueeWrap(`<div id="questionRender">${renderLatex(currentQuestion.question)}</div>`)}
+    </div>
+    <div class="options fade-in" id="optionsWrap">
+      ${OPTION_LETTERS.map(letter => `
+        <button class="opt-btn" data-letter="${letter}">
+          ${marqueeWrap(`<span class="opt-letter">${letter}</span><span>${renderLatex(currentQuestion.options[letter])}</span>`)}
+        </button>
+      `).join('')}
+    </div>
+  `;
+
+  optionButtons = [...gameArea.querySelectorAll('.opt-btn')];
+  gameArea.querySelector('#optionsWrap').addEventListener('click', event => {
+    const btn = event.target.closest('.opt-btn');
+    if(!btn || answered) return;
+    handleAnswer(btn.dataset.letter);
+  });
+
+  clearInterval(timerInterval);
+  timerInterval = setInterval(()=>{
+    timeLeft--;
+    updateTimerPill();
+    if(timeLeft <= 0){
+      clearInterval(timerInterval);
+      if(!answered) handleTimeout();
+    }
+  }, 1000);
+}
+
+function updateTimerPill(){
+  timerPill.textContent = `${Math.max(timeLeft,0)}s`;
+  timerPill.classList.toggle('low', timeLeft <= 10);
+}
+
+function handleAnswer(letter){
+  answered = true;
+  clearInterval(timerInterval);
+  optionButtons.forEach(b => b.classList.add('disabled'));
+
+  const isCorrect = letter === currentQuestion.correctAnswer;
+  optionButtons.forEach(b=>{
+    if(b.dataset.letter === currentQuestion.correctAnswer) b.classList.add('correct');
+    else if(b.dataset.letter === letter) b.classList.add('wrong');
+  });
+
+  setTimeout(()=>{
+    if(isCorrect) renderCorrect();
+    else renderIncorrect('Incorrect!');
+  }, 700);
+}
+
+function handleTimeout(){
+  answered = true;
+  renderIncorrect('Time Expired!');
+}
+
+/* ======================================================================
+   5. STATE 2 — CORRECT
+====================================================================== */
+function renderCorrect(){
+  const tileWord = cfg.tiles === 1 ? 'tile' : 'tiles';
+  gameArea.innerHTML = `
+    <div class="fade-in">
+      <div class="result-banner good">Correct! Move forward ${cfg.tiles} ${tileWord}.</div>
+      <div class="solution-box">
+        <span class="label">SOLUTION</span>
+        ${renderLatex(currentQuestion.solution)}
+      </div>
+    </div>
+  `;
+  setTimeout(renderTermination, 2000);
+}
+
+/* ======================================================================
+   6. STATE 3 — INCORRECT / TIMEOUT + PENALTY PHASE
+====================================================================== */
+function renderIncorrect(headline){
+  gameArea.innerHTML = `
+    <div class="fade-in">
+      <div class="result-banner bad">${headline}</div>
+      <div class="solution-box">
+        <span class="label">SOLUTION</span>
+        ${renderLatex(currentQuestion.solution)}
+      </div>
+      <div class="penalty-row" id="penaltyRow">
+        <button class="penalty-btn" id="skipBtn">Skip Turn</button>
+        <button class="penalty-btn" id="mysteryBtn">Draw Mystery Card</button>
+      </div>
+      <div id="penaltyResult"></div>
+    </div>
+  `;
+
+  const penaltyRow = gameArea.querySelector('#penaltyRow');
+  const penaltyResult = gameArea.querySelector('#penaltyResult');
+  gameArea.querySelector('#skipBtn').addEventListener('click', () => {
+    penaltyRow.style.display = 'none';
+    penaltyResult.innerHTML = `
+      <div class="card-result penalty fade-in">You chose to skip your turn.</div>
+    `;
+    setTimeout(renderTermination, 1600);
+  });
+
+  gameArea.querySelector('#mysteryBtn').addEventListener('click', () => {
+    penaltyRow.style.display = 'none';
+    const isBenefit = Math.random() < 0.5;
+    const msg = isBenefit ? 'Benefit: Move 1 extra tile' : 'Penalty: Move back 1 tile';
+    penaltyResult.innerHTML = `
+      <div class="card-result ${isBenefit ? 'benefit' : 'penalty'} fade-in">${msg}</div>
+    `;
+    setTimeout(renderTermination, 1600);
+  });
+}
+
+/* ======================================================================
+   7. STATE 4 — TERMINATION
+====================================================================== */
+function renderTermination(){
+  gameArea.innerHTML = `
+    <div class="term-wrap fade-in">
+      <div class="term-msg" id="termMsg">Session closing in <span id="closeCount">5</span> seconds. You may safely close this tab.</div>
+      <div class="term-count" id="countCircle">5</div>
+      <div class="term-fallback" id="fallbackMsg" style="display:none;">
+        This tab couldn't be closed automatically — that's normal browser behavior. Feel free to close it yourself, or play again below.
+      </div>
+      <button class="penalty-btn" id="playAgainBtn" style="display:none; flex:0 0 auto; padding:12px 22px;">Play Again</button>
+    </div>
+  `;
+
+  let count = 5;
+  const countCircle = document.getElementById('countCircle');
+  const closeCountSpan = document.getElementById('closeCount');
+  const fallbackMsg = document.getElementById('fallbackMsg');
+  const playAgainBtn = document.getElementById('playAgainBtn');
+
+  playAgainBtn.addEventListener('click', resetGame);
+
+  const closeTimer = setInterval(()=>{
+    count--;
+    if(count >= 0){
+      countCircle.textContent = count;
+      closeCountSpan.textContent = count;
+    }
+    if(count <= 0){
+      clearInterval(closeTimer);
+
+      // Most browsers silently ignore window.close() on tabs the page
+      // didn't open itself, so this can't be relied on to actually work —
+      // wrap it defensively and always fall back to a manual option.
+      try{
+        window.close();
+      }catch(e){
+        console.warn('[Quest\'O Carousel] window.close() was blocked by the browser:', e);
+      }
+
+      // Give the browser a beat to attempt the close; if we're still here,
+      // show the manual-close message and a way to keep playing.
+      setTimeout(()=>{
+        fallbackMsg.style.display = 'block';
+        playAgainBtn.style.display = 'inline-block';
+      }, 300);
+    }
+  }, 1000);
+}
+
+/* Resets in-memory game state and starts a new round without a full page
+   reload, so the carousel can be replayed indefinitely from one tab. */
+function resetGame(){
+  recentQuestions = [];
+  startRound();
+}
+
+/* ======================================================================
+   INIT
+====================================================================== */
+startRound();
+</script>
+
+</body>
+</html>
