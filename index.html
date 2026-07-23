@@ -498,6 +498,9 @@ const OPENROUTER_API_KEY = "sk-or-v1-561e06f74468420f9e3e998ec82bf58d5cfd30f81da
 const OPENROUTER_ENDPOINT = "https://openrouter.ai/api/v1/chat/completions";
 const AI_RESPONSE_TIMEOUT_MS = 10000;
 const TIMER_WARNING_SECONDS = 10;
+const SLOW_NETWORK_EFFECTIVE_TYPES = new Set(['slow-2g', '2g']);
+const SLOW_NETWORK_MAX_DOWNLINK_MBPS = 0.75;
+const SLOW_NETWORK_MIN_RTT_MS = 1200;
 
 // You can use "google/gemini-2.5-flash", "google/gemini-flash-1.5", 
 // "meta-llama/llama-3.3-70b-instruct", or any free/paid model on OpenRouter.
@@ -585,6 +588,33 @@ function pickFallback(diff){
   return bank[Math.floor(Math.random() * bank.length)];
 }
 
+function getSlowConnectionReason(){
+  if(navigator.onLine === false){
+    return 'browser reports that the device is offline';
+  }
+
+  const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+  if(!connection) return '';
+
+  if(connection.saveData){
+    return 'data-saver mode is enabled';
+  }
+
+  if(SLOW_NETWORK_EFFECTIVE_TYPES.has(connection.effectiveType)){
+    return `network type is ${connection.effectiveType}`;
+  }
+
+  if(typeof connection.downlink === 'number' && connection.downlink > 0 && connection.downlink < SLOW_NETWORK_MAX_DOWNLINK_MBPS){
+    return `estimated downlink is ${connection.downlink} Mbps`;
+  }
+
+  if(typeof connection.rtt === 'number' && connection.rtt > SLOW_NETWORK_MIN_RTT_MS){
+    return `estimated network latency is ${connection.rtt} ms`;
+  }
+
+  return '';
+}
+
 function normalizeJsonBackslashes(jsonString){
   // OpenRouter models sometimes return LaTeX as `\sqrt` inside JSON strings.
   // In JSON, that is either invalid (`\s`) or silently corrupted (`\f` in
@@ -593,11 +623,61 @@ function normalizeJsonBackslashes(jsonString){
   return jsonString.replace(/(^|[^\\])\\(?!["\\])/g, '$1\\\\');
 }
 
+function extractBalancedJsonObjects(rawText){
+  const objects = [];
+
+  for(let start = 0; start < rawText.length; start++){
+    if(rawText[start] !== '{') continue;
+
+    let depth = 0;
+    let inString = false;
+    let escaped = false;
+
+    for(let i = start; i < rawText.length; i++){
+      const char = rawText[i];
+
+      if(inString){
+        if(escaped){
+          escaped = false;
+        } else if(char === '\\'){
+          escaped = true;
+        } else if(char === '"'){
+          inString = false;
+        }
+        continue;
+      }
+
+      if(char === '"'){
+        inString = true;
+      } else if(char === '{'){
+        depth++;
+      } else if(char === '}'){
+        depth--;
+        if(depth === 0){
+          objects.push(rawText.slice(start, i + 1));
+          break;
+        }
+      }
+    }
+  }
+
+  return objects;
+}
+
+function isQuestionPayload(parsed){
+  return !!(parsed.question && parsed.options?.A && parsed.options?.B && parsed.options?.C
+    && ["A","B","C"].includes(parsed.correctAnswer) && parsed.solution);
+}
+
 async function generateQuestion(diff){
   let result;
+  const slowConnectionReason = getSlowConnectionReason();
 
   if(!isKeyConfigured()){
     console.warn('[Quest\'O Carousel] No OpenRouter API key configured — using an offline fallback question.');
+    result = pickFallback(diff);
+  } else if(slowConnectionReason){
+    console.warn('[Quest\'O Carousel] Slow connection detected — using an offline fallback question. Reason:', slowConnectionReason);
     result = pickFallback(diff);
   } else {
     const subtopic = SUBTOPICS[Math.floor(Math.random() * SUBTOPICS.length)];
@@ -658,20 +738,30 @@ Rules:
       const rawText = data?.choices?.[0]?.message?.content;
       if(!rawText) throw new Error("OpenRouter returned no content");
 
-      // Extract JSON payload
-      const jsonMatch = rawText.match(/\{[\s\S]*\}/);
-      if(!jsonMatch) throw new Error("No JSON object found in OpenRouter response");
+      // Extract balanced JSON candidates without swallowing invalid trailing text.
+      const jsonCandidates = extractBalancedJsonObjects(rawText);
+      if(!jsonCandidates.length) throw new Error("No JSON object found in OpenRouter response");
 
-      let jsonString = jsonMatch[0];
-
-      jsonString = normalizeJsonBackslashes(jsonString);
-
-      const parsed = JSON.parse(jsonString);
-
-      if(!parsed.question || !parsed.options?.A || !parsed.options?.B || !parsed.options?.C
-         || !["A","B","C"].includes(parsed.correctAnswer) || !parsed.solution){
-        throw new Error("OpenRouter response was missing required fields");
+      let parsed = null;
+      let parseError = null;
+      for(const candidate of jsonCandidates){
+        try {
+          const candidateJson = normalizeJsonBackslashes(candidate);
+          const candidateParsed = JSON.parse(candidateJson);
+          if(isQuestionPayload(candidateParsed)){
+            parsed = candidateParsed;
+            break;
+          }
+          parseError = new Error("JSON object was missing required fields");
+        } catch(err) {
+          parseError = err;
+        }
       }
+
+      if(!parsed){
+        throw new Error(parseError?.message || "No valid question JSON found in OpenRouter response");
+      }
+
       result = parsed;
     } catch(err) {
       const reason = err?.name === 'AbortError'
@@ -1046,6 +1136,7 @@ function playTone(frequency, duration = 0.12, type = 'sine', gainValue = 0.08, d
 }
 
 document.addEventListener('pointerdown', unlockAudio, { once: true, passive: true });
+document.addEventListener('keydown', unlockAudio, { once: true });
 
 function playSound(name){
   if(name === 'timer'){
@@ -1192,6 +1283,8 @@ function handleAnswer(letter){
 
 function handleTimeout(){
   answered = true;
+  clearInterval(timerInterval);
+  optionButtons.forEach(b => b.classList.add('disabled'));
   playSound('wrong');
   renderIncorrect('Time Expired!');
 }
@@ -1272,7 +1365,7 @@ function renderTermination(){
   let count = 5;
   const countCircle = document.getElementById('countCircle');
   const closeCountSpan = document.getElementById('closeCount');
-  const fallbackMsg = document.getElementById('fallbackMsg'); q
+  const fallbackMsg = document.getElementById('fallbackMsg');
   const playAgainBtn = document.getElementById('playAgainBtn');
 
   playAgainBtn.addEventListener('click', resetGame);
